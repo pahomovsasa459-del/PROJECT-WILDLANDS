@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>PROJECT: WILDLANDS</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101b16;color:#fff;font-family:Arial,sans-serif;touch-action:none}
+#game{position:fixed;inset:0}canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none}
+#brand{position:absolute;top:16px;left:16px;font-size:13px;letter-spacing:3px;color:#c9edce;text-shadow:0 2px 8px #000}
+#status{position:absolute;top:40px;left:16px;font-size:11px;color:#fff;text-shadow:0 2px 6px #000}
+#cross{position:absolute;left:50%;top:50%;width:8px;height:8px;border:1px solid #fff;border-radius:50%;transform:translate(-50%,-50%)}
+#joystick{position:absolute;left:22px;bottom:25px;width:118px;height:118px;border:1px solid #ffffff77;border-radius:50%;background:#07110d66;pointer-events:auto}
+#stick{position:absolute;left:36px;top:36px;width:44px;height:44px;border-radius:50%;background:#c7e7ce99;border:1px solid #eaffed}
+#look{position:absolute;right:0;bottom:0;width:58%;height:70%;pointer-events:auto}
+#action{position:absolute;right:24px;bottom:36px;width:84px;height:72px;border-radius:50%;border:1px solid #d9f4dc;background:#173d2cdd;color:#fff;font-weight:bold;font-size:11px;pointer-events:auto}
+#message{position:absolute;left:50%;top:17%;transform:translateX(-50%);width:min(86%,420px);padding:14px;background:#07110df0;border:1px solid #9bc8a8;border-radius:10px;text-align:center;display:none;font-size:14px;line-height:1.5;pointer-events:auto}
+#start{position:absolute;inset:0;background:linear-gradient(#07110d88,#07110dee);display:flex;align-items:center;justify-content:center;pointer-events:auto}
+#panel{text-align:center;padding:28px;max-width:350px}
+#panel h1{font-size:25px;letter-spacing:4px;color:#c8e9cd}
+#panel p{font-size:14px;line-height:1.5;color:#d5ddd5}
+#play{border:0;border-radius:7px;background:#9bc8a8;color:#102017;font-weight:bold;padding:14px 28px;font-size:15px}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="hud">
+ <div id="brand">PROJECT: WILDLANDS</div><div id="status">VERDANA ISLAND · PROTOTYPE 0.1</div>
+ <div id="cross"></div><div id="joystick"><div id="stick"></div></div><div id="look"></div>
+ <button id="action">ОСМОТРЕТЬ</button><div id="message"></div>
+</div>
+<div id="start"><div id="panel"><h1>WILDLANDS</h1><p>Остров Вердана. Самолёт потерпел крушение. Несколько человек пропали. Нужно осмотреть место аварии.</p><p>Левый круг — движение. Проводи пальцем по правой стороне экрана, чтобы осматриваться. Подойди к обломкам и нажми «ОСМОТРЕТЬ».</p><button id="play">НАЧАТЬ</button></div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x9ab6a2);scene.fog=new THREE.Fog(0x9ab6a2,22,90);
+const camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,150);camera.position.set(0,1.7,8);
+const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'low-power'});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.35));document.getElementById('game').appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xd9eddf,0x33432b,2));
+const sun=new THREE.DirectionalLight(0xffe6bf,1.35);sun.position.set(-15,25,12);scene.add(sun);
+const mat=(c)=>new THREE.MeshStandardMaterial({color:c,roughness:1});
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(180,180),mat(0x496b3d));ground.rotation.x=-Math.PI/2;ground.position.y=-.08;scene.add(ground);
+const rand=(a,b)=>a+Math.random()*(b-a);
+function tree(x,z,s=1){const g=new THREE.Group();const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.14*s,.23*s,2.4*s,6),mat(0x59432b));trunk.position.y=1.2*s;g.add(trunk);for(let i=0;i<3;i++){const crown=new THREE.Mesh(new THREE.ConeGeometry(rand(1.05,1.5)*s,rand(1.8,2.5)*s,7),mat([0x244d32,0x2d6038,0x376d3d][i]));crown.position.set(rand(-.12,.12)*s,(2.2+i*.48)*s,rand(-.12,.12)*s);g.add(crown)}g.position.set(x,0,z);scene.add(g)}
+for(let i=0;i<105;i++){const x=rand(-43,43),z=rand(-43,43);if(Math.abs(x)<5&&z>-13&&z<12)continue;tree(x,z,rand(.7,1.35))}
+for(let i=0;i<35;i++){const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.3,.9),0),mat(0x687064));rock.position.set(rand(-32,32),.2,rand(-32,32));rock.scale.y=.65;scene.add(rock)}
+// Условные обломки самолёта — ориентир первой миссии
+const wreck=new THREE.Group();
+const body=new THREE.Mesh(new THREE.CylinderGeometry(.58,.72,6,10),mat(0x777c70));body.rotation.z=Math.PI/2;body.position.y=.9;wreck.add(body);
+const wing=new THREE.Mesh(new THREE.BoxGeometry(1, .12,7),mat(0x999b88));wing.position.y=.8;wreck.add(wing);
+const tail=new THREE.Mesh(new THREE.BoxGeometry(1.2,.15,1.4),mat(0x777c70));tail.position.set(-2.5,1.25,0);wreck.add(tail);
+wreck.position.set(2,0,-5);wreck.rotation.y=-.25;scene.add(wreck);
+const beacon=new THREE.Mesh(new THREE.OctahedronGeometry(.24),new THREE.MeshStandardMaterial({color:0x9fe5ad,emissive:0x326b3e}));beacon.position.set(2,1.7,-5);scene.add(beacon);
+let yaw=0,pitch=0,started=false,found=false,moveX=0,moveY=0,joyId=null,lookId=null,lastX=0,lastY=0;
+const joy=document.getElementById('joystick'),stick=document.getElementById('stick'),look=document.getElementById('look'),msg=document.getElementById('message');
+function updateCamera(){camera.rotation.order='YXZ';camera.rotation.y=yaw;camera.rotation.x=pitch}
+function joyMove(e){const r=joy.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let dx=e.clientX-cx,dy=e.clientY-cy;const len=Math.hypot(dx,dy),max=38;if(len>max){dx=dx/len*max;dy=dy/len*max}stick.style.transform='translate('+dx+'px,'+dy+'px)';moveX=dx/max;moveY=dy/max}
+joy.addEventListener('pointerdown',e=>{joyId=e.pointerId;joy.setPointerCapture(joyId);joyMove(e)});
+joy.addEventListener('pointermove',e=>{if(e.pointerId===joyId)joyMove(e)});
+function stopJoy(e){if(e.pointerId===joyId){joyId=null;moveX=moveY=0;stick.style.transform='translate(0,0)'}}
+joy.addEventListener('pointerup',stopJoy);joy.addEventListener('pointercancel',stopJoy);
+look.addEventListener('pointerdown',e=>{lookId=e.pointerId;lastX=e.clientX;lastY=e.clientY;look.setPointerCapture(lookId)});
+look.addEventListener('pointermove',e=>{if(e.pointerId!==lookId)return;const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;yaw-=dx*.004;pitch=Math.max(-1.15,Math.min(1.15,pitch-dy*.004));updateCamera()});
+function stopLook(e){if(e.pointerId===lookId)lookId=null}
+look.addEventListener('pointerup',stopLook);look.addEventListener('pointercancel',stopLook);
+document.getElementById('action').addEventListener('click',()=>{const d=camera.position.distanceTo(new THREE.Vector3(2,0,-5));if(d<7){found=true;msg.innerHTML='<b>НАЙДЕНА ЗАПИСЬ</b><br>На обрывке бумаги написано: «СЕКТОР. Объект Вердана. Эвакуация отменена».<br><br>Новая цель: найти дорогу вглубь острова.<br><button id="close" style="margin-top:10px;padding:9px 18px">ПОНЯТНО</button>';msg.style.display='block';document.getElementById('close').onclick=()=>msg.style.display='none'}else{msg.textContent='Подойди ближе к обломкам самолёта.';msg.style.display='block';setTimeout(()=>msg.style.display='none',1800)}});
+document.getElementById('play').onclick=()=>{started=true;document.getElementById('start').style.display='none'};
+const clock=new THREE.Clock();
+function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);if(started){const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));camera.position.addScaledVector(forward,-moveY*dt*4);camera.position.addScaledVector(right,moveX*dt*4);camera.position.y=1.7;camera.position.x=Math.max(-55,Math.min(55,camera.position.x));camera.position.z=Math.max(-55,Math.min(55,camera.position.z));beacon.rotation.y+=dt*1.2;beacon.position.y=1.7+Math.sin(performance.now()*.002)*.12}renderer.render(scene,camera)}
+animate();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+</script>
+</body></html>
